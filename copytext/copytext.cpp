@@ -8,6 +8,8 @@ char* capitalize(char *text);
 
 char* quote(char *text);
 
+char* numbers(char *text);
+
 int main(int argc, char* argv[])
 {
   if (argc < 2) {
@@ -39,6 +41,10 @@ int main(int argc, char* argv[])
     if (cmp == 0) {
       text = quote(text);
     }
+  cmp = strcmp(opt0, "-n");
+  if (cmp == 0) {
+    text = numbers(text);
+  }
   }
 
   GLOBALHANDLE hGlobal = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT | GMEM_SHARE, 1024);
@@ -113,7 +119,7 @@ char* quote(char *text)
 
   int count = 0;
   for (int i = 0; i < len; i++) {
-    if (*text == '\'') {
+    if (text[i] == '\'') {
       count++;
     }
   }
@@ -127,6 +133,31 @@ char* quote(char *text)
     text++;
   }
   *buffer++ = '\'';
+  *buffer = '\0';
+
+  return result;
+}
+
+char* numbers(char *text)
+{
+  size_t len = strlen(text);
+  if (len == 0) return text;
+
+  int count = 0;
+  for (int i = 0; i < len; i++) {
+    if (text[i] >= 48 && text[i] <= 57) {
+      count++;
+    }
+  }
+
+  char *buffer = new char[count + 1];
+  char *result = buffer;
+  while (*text != '\0') {
+    if (*text >= 48 && *text <= 57) {
+      *buffer++ = *text;
+    }
+    text++;
+  }
   *buffer = '\0';
 
   return result;
