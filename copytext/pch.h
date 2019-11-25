@@ -2,7 +2,9 @@
 #define PCH_H
 
 #include <stdio.h>
+#include <time.h>
 #include <tchar.h>
+#include <direct.h>
 
 #include <windows.h>
 
