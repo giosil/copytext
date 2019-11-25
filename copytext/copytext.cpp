@@ -3,27 +3,16 @@
 // Functions Declarations
 
 char* lowercase(char *text);
-
 char* uppercase(char *text);
-
 char* capitalize(char *text);
-
 char* reverse(char *text);
-
 char* quote(char *text);
-
 char* numbers(char *text);
-
 char* currentDate();
-
 char* currentTime();
-
 char* concat(char *text1, char *text2);
-
 char* concatPath(char *text1, char *text2);
-
 char* currentWorkDir();
-
 bool showHelp(char *text);
 
 // Entry point
@@ -229,7 +218,7 @@ char* currentDate()
   int iDate = (1900 + tm.tm_year) * 10000 + (tm.tm_mon + 1) * 100 + tm.tm_mday;
 
   char *buffer = new char[9];
-  char* result = _itoa(iDate, buffer, 10);
+  char *result = _itoa(iDate, buffer, 10);
   return result;
 }
 
@@ -240,8 +229,8 @@ char* currentTime()
 
   int iHHMM = tm.tm_hour * 100 + tm.tm_min;
 
-  char* buffer = new char[9];
-  char* result = _itoa(iHHMM, buffer, 10);
+  char *buffer = new char[9];
+  char *result = _itoa(iHHMM, buffer, 10);
   return result;
 }
 
