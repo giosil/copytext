@@ -8,11 +8,20 @@ char* capitalize(char *text);
 char* reverse(char *text);
 char* quote(char *text);
 char* numbers(char *text);
-char* currentDate();
-char* currentTime();
 char* concat(char *text1, char *text2);
 char* concatPath(char *text1, char *text2);
+char* trim(char *text);
+char* substring(char *text, int beginIndex, int endIndex);
+char* substring(char *text, int beginIndex);
+char* removeQuotes(char *text);
+char* value(char *text);
+
+int indexOf(char *text, char c);
+
+char* currentDate();
+char* currentTime();
 char* currentWorkDir();
+
 bool showHelp(char *text);
 
 // Entry point
@@ -70,6 +79,10 @@ int main(int argc, char* argv[])
     cmp = strcmp(opt0, "-t");
     if (cmp == 0) {
       text = concat(text, currentTime());
+    }
+    cmp = strcmp(opt0, "-v");
+    if (cmp == 0) {
+      text = value(text);
     }
     cmp = strcmp(opt0, "-w");
     if (cmp == 0) {
@@ -210,30 +223,6 @@ char* numbers(char *text)
   return result;
 }
 
-char* currentDate()
-{
-  time_t t = time(NULL);
-  struct tm tm = *localtime(&t);
-
-  int iDate = (1900 + tm.tm_year) * 10000 + (tm.tm_mon + 1) * 100 + tm.tm_mday;
-
-  char *buffer = new char[9];
-  char *result = _itoa(iDate, buffer, 10);
-  return result;
-}
-
-char* currentTime()
-{
-  time_t t = time(NULL);
-  struct tm tm = *localtime(&t);
-
-  int iHHMM = tm.tm_hour * 100 + tm.tm_min;
-
-  char *buffer = new char[9];
-  char *result = _itoa(iHHMM, buffer, 10);
-  return result;
-}
-
 char* concat(char *text1, char *text2)
 {
   size_t len1 = strlen(text1);
@@ -259,6 +248,156 @@ char* concatPath(char *text1, char *text2)
   return buffer;
 }
 
+char* trim(char *text)
+{
+  size_t len = strlen(text);
+  if (len == 0) return text;
+
+  int count = 0;
+  for (int i = 0; i < len; i++) {
+    if (text[i] > 32) {
+      count++;
+    }
+  }
+
+  char *buffer = new char[count + 1];
+  char *result = buffer;
+  while (*text != '\0') {
+    if (*text > 32) {
+      *buffer++ = *text;
+    }
+    text++;
+  }
+  *buffer = '\0';
+
+  return result;
+}
+
+char* substring(char *text, int beginIndex, int endIndex)
+{
+  if (beginIndex == endIndex) {
+    char *empty = {'\0'};
+    return empty;
+  }
+
+  char *buffer = new char[endIndex - beginIndex + 1];
+  char *result = buffer;
+  text += beginIndex;
+  while (*text != '\0') {
+    if (*text > 32) {
+      *buffer++ = *text;
+    }
+    text++;
+  }
+  *buffer = '\0';
+
+  return result;
+}
+
+char* substring(char *text, int beginIndex)
+{
+  size_t endIndex = strlen(text);
+
+  if (beginIndex == endIndex) {
+    char *empty = { '\0' };
+    return empty;
+  }
+
+  char *buffer = new char[endIndex - beginIndex + 1];
+  char *result = buffer;
+  text += beginIndex;
+  while (*text != '\0') {
+    if (*text > 32) {
+      *buffer++ = *text;
+    }
+    text++;
+  }
+  *buffer = '\0';
+
+  return result;
+}
+
+char* removeQuotes(char *text)
+{
+  size_t len = strlen(text);
+  if (len == 0) return text;
+
+  if (text[0] != '\'' && text[0] != '"') {
+    return text;
+  }
+  if (text[len - 1] != '\'' && text[len - 1] != '"') {
+    return text;
+  }
+  
+  int i = 0;
+  char *buffer = new char[len - 2 + 1];
+  char *result = buffer;
+  text++;
+  while (*text != '\0') {
+    i++;
+    if (i == len - 1) break;
+    *buffer++ = *text++;
+  }
+  *buffer = '\0';
+
+  return result;
+}
+
+int indexOf(char *text, char c)
+{
+  size_t len = strlen(text);
+  if (len == 0) return -1;
+
+  for (int i = 0; i < len; i++) {
+    if (text[i] == c) return i;
+  }
+
+  return -1;
+}
+
+char* value(char *text)
+{
+  int idx = indexOf(text, '=');
+  if (idx < 0) {
+    idx = indexOf(text, ':');
+  }
+  if (idx < 0) {
+    return text;
+  }
+  
+  char *sub = substring(text, idx + 1);
+
+  char *trm = trim(sub);
+
+  char *result = removeQuotes(trm);
+
+  return result;
+}
+
+char* currentDate()
+{
+  time_t t = time(NULL);
+  struct tm tm = *localtime(&t);
+
+  int iDate = (1900 + tm.tm_year) * 10000 + (tm.tm_mon + 1) * 100 + tm.tm_mday;
+
+  char *buffer = new char[9];
+  char *result = _itoa(iDate, buffer, 10);
+  return result;
+}
+
+char* currentTime()
+{
+  time_t t = time(NULL);
+  struct tm tm = *localtime(&t);
+
+  int iHHMM = tm.tm_hour * 100 + tm.tm_min;
+
+  char *buffer = new char[9];
+  char *result = _itoa(iHHMM, buffer, 10);
+  return result;
+}
+
 char* currentWorkDir()
 {
   char *buffer = new char[FILENAME_MAX];
@@ -280,7 +419,7 @@ bool showHelp(char *text)
   printf("%s ver. %d.%d\n\n", PRG_NAME, PRG_VER_MAJ, PRG_VER_MIN);
 
   printf("Options:\n\n");
-  printf("  -h: this guide;\n");
+  printf("  -h: help;\n");
   printf("  -l: lowercase;\n");
   printf("  -u: uppercase;\n");
   printf("  -r: reverse;\n");
@@ -289,6 +428,7 @@ bool showHelp(char *text)
   printf("  -e: environmen variable;\n");
   printf("  -d: append date;\n");
   printf("  -t: append time;\n");
+  printf("  -v: extract value from key=value;\n");
   printf("  -w: prepend current work directory.\n\n");
 
   printf("Example:\n\n");
