@@ -8,10 +8,11 @@ Command line to copy text to clipboard.
 -h: help;
 -l: lowercase;
 -u: uppercase;
+-c: capitalize;
 -r: reverse;
 -q: quote;
 -n: extract numbers;
--e: environmen variable;
+-e: environment variable;
 -f: read file;
 -s: save to file copytext.txt;
 -d: append date;

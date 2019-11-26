@@ -1,5 +1,20 @@
 #include "pch.h"
 
+#define OPT_HELP         1
+#define OPT_LOWERCASE    2
+#define OPT_UPPERCASE    3
+#define OPT_CAPITALIZE   4
+#define OPT_REVERSE      5
+#define OPT_QUOTE        6
+#define OPT_NUMBERS      7
+#define OPT_ENVIRONMENT  8
+#define OPT_READ_FILE    9
+#define OPT_SAVE_FILE   10
+#define OPT_DATE        11
+#define OPT_TIME        12
+#define OPT_VALUE       13
+#define OPT_WORK_DIR    14
+
 // Functions Declarations
 
 char* lowercase(char *text);
@@ -25,6 +40,7 @@ char* currentDate();
 char* currentTime();
 char* currentWorkDir();
 
+int getOption(char *opt);
 bool showHelp(char *text);
 
 // Entry point
@@ -40,65 +56,53 @@ int main(int argc, char* argv[])
   char* opt0 = argc > 2 ? argv[1] : 0;
   char* text = argc > 2 ? argv[2] : argv[1];
 
-  if (showHelp(text)) {
-    exit(1);
-  }
+  if (showHelp(text)) exit(1);
 
-  if (opt0) {
-    showHelp(opt0);
-
-    int cmp = strcmp(opt0, "-l");
-    if (cmp == 0) {
+  int opt = getOption(opt0);
+  switch (opt)
+  {
+    case OPT_HELP:
+      showHelp(opt0);
+      break;
+    case OPT_LOWERCASE:
       text = lowercase(text);
-    }
-    cmp = strcmp(opt0, "-u");
-    if (cmp == 0) {
+      break;
+    case OPT_UPPERCASE:
       text = uppercase(text);
-    }
-    cmp = strcmp(opt0, "-c");
-    if (cmp == 0) {
+      break;
+    case OPT_CAPITALIZE:
       text = capitalize(text);
-    }
-    cmp = strcmp(opt0, "-r");
-    if (cmp == 0) {
+      break;
+    case OPT_REVERSE:
       text = reverse(text);
-    }
-    cmp = strcmp(opt0, "-q");
-    if (cmp == 0) {
+      break;
+    case OPT_QUOTE:
       text = quote(text);
-    }
-    cmp = strcmp(opt0, "-n");
-    if (cmp == 0) {
+      break;
+    case OPT_NUMBERS:
       text = numbers(text);
-    }
-    cmp = strcmp(opt0, "-e");
-    if (cmp == 0) {
+      break;
+    case OPT_ENVIRONMENT:
       text = getenv(text);
-    }
-    cmp = strcmp(opt0, "-f");
-    if (cmp == 0) {
+      break;
+    case OPT_READ_FILE:
       text = readTextFile(text, 255);
-    }
-    cmp = strcmp(opt0, "-s");
-    if (cmp == 0) {
+      break;
+    case OPT_SAVE_FILE:
       writeTextFile("copytext.txt", text);
-    }
-    cmp = strcmp(opt0, "-d");
-    if (cmp == 0) {
+      break;
+    case OPT_DATE:
       text = concat(text, currentDate());
-    }
-    cmp = strcmp(opt0, "-t");
-    if (cmp == 0) {
+      break;
+    case OPT_TIME:
       text = concat(text, currentTime());
-    }
-    cmp = strcmp(opt0, "-v");
-    if (cmp == 0) {
+      break;
+    case OPT_VALUE:
       text = value(text);
-    }
-    cmp = strcmp(opt0, "-w");
-    if (cmp == 0) {
+      break;
+    case OPT_WORK_DIR:
       text = concatPath(currentWorkDir(), text);
-    }
+      break;
   }
 
   GLOBALHANDLE hGlobal = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT | GMEM_SHARE, 1024);
@@ -457,6 +461,55 @@ char* currentWorkDir()
   return buffer;
 }
 
+int getOption(char *opt)
+{
+  if (opt == NULL) return 0;
+
+  int cmp = strcmp(opt, "-h");
+  if (cmp == 0) return OPT_HELP;
+
+  cmp = strcmp(opt, "-l");
+  if (cmp == 0) return OPT_LOWERCASE;
+
+  cmp = strcmp(opt, "-u");
+  if (cmp == 0) return OPT_UPPERCASE;
+
+  cmp = strcmp(opt, "-c");
+  if (cmp == 0) return OPT_CAPITALIZE;
+
+  cmp = strcmp(opt, "-r");
+  if (cmp == 0) return OPT_REVERSE;
+
+  cmp = strcmp(opt, "-q");
+  if (cmp == 0) return OPT_QUOTE;
+
+  cmp = strcmp(opt, "-n");
+  if (cmp == 0) return OPT_NUMBERS;
+
+  cmp = strcmp(opt, "-e");
+  if (cmp == 0) return OPT_ENVIRONMENT;
+
+  cmp = strcmp(opt, "-f");
+  if (cmp == 0) return OPT_READ_FILE;
+
+  cmp = strcmp(opt, "-s");
+  if (cmp == 0) return OPT_SAVE_FILE;
+
+  cmp = strcmp(opt, "-d");
+  if (cmp == 0) return OPT_DATE;
+
+  cmp = strcmp(opt, "-t");
+  if (cmp == 0) return OPT_TIME;
+
+  cmp = strcmp(opt, "-v");
+  if (cmp == 0) return OPT_VALUE;
+
+  cmp = strcmp(opt, "-w");
+  if (cmp == 0) return OPT_WORK_DIR;
+
+  return 0;
+}
+
 bool showHelp(char *text)
 {
   int cmp = strcmp(text, "-h");
@@ -472,10 +525,11 @@ bool showHelp(char *text)
   printf("  -h: help;\n");
   printf("  -l: lowercase;\n");
   printf("  -u: uppercase;\n");
+  printf("  -c: capitalize;\n");
   printf("  -r: reverse;\n");
   printf("  -q: quote;\n");
   printf("  -n: extract numbers;\n");
-  printf("  -e: environmen variable;\n");
+  printf("  -e: environment variable;\n");
   printf("  -f: read file;\n");
   printf("  -s: save to file copytext.txt;\n");
   printf("  -d: append date;\n");
