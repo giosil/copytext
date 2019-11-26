@@ -18,6 +18,9 @@ char* value(char *text);
 
 int indexOf(char *text, char c);
 
+char* readTextFile(char *file, int max);
+bool writeTextFile(const char *file, char *text);
+
 char* currentDate();
 char* currentTime();
 char* currentWorkDir();
@@ -71,6 +74,14 @@ int main(int argc, char* argv[])
     cmp = strcmp(opt0, "-e");
     if (cmp == 0) {
       text = getenv(text);
+    }
+    cmp = strcmp(opt0, "-f");
+    if (cmp == 0) {
+      text = readTextFile(text, 255);
+    }
+    cmp = strcmp(opt0, "-s");
+    if (cmp == 0) {
+      writeTextFile("copytext.txt", text);
     }
     cmp = strcmp(opt0, "-d");
     if (cmp == 0) {
@@ -276,8 +287,7 @@ char* trim(char *text)
 char* substring(char *text, int beginIndex, int endIndex)
 {
   if (beginIndex == endIndex) {
-    char *empty = {'\0'};
-    return empty;
+    return { '\0' };
   }
 
   char *buffer = new char[endIndex - beginIndex + 1];
@@ -299,8 +309,7 @@ char* substring(char *text, int beginIndex)
   size_t endIndex = strlen(text);
 
   if (beginIndex == endIndex) {
-    char *empty = { '\0' };
-    return empty;
+    return { '\0' };
   }
 
   char *buffer = new char[endIndex - beginIndex + 1];
@@ -374,6 +383,47 @@ char* value(char *text)
   return result;
 }
 
+char* readTextFile(char *file, int max)
+{
+  FILE *fp = fopen(file, "r");
+
+  if (fp == NULL) {
+    printf("File %s not found", file);
+    return {'\0'};
+  }
+
+  if (max == 0) max = 255;
+
+  char *buffer = new char[max + 1];
+
+  int i = 0;
+  char c;
+  while ((c = fgetc(fp)) != EOF) {
+    buffer[i++] = c;
+    if (i >= max) break;
+  }
+  buffer[i] = '\0';
+
+  fclose(fp);
+
+  return buffer;
+}
+
+bool writeTextFile(const char *file, char *text)
+{
+  FILE *fp = fopen(file, "w");
+
+  if (fp == NULL) {
+    return false;
+  }
+
+  fprintf(fp, "%s", text);
+
+  fclose(fp);
+
+  return true;
+}
+
 char* currentDate()
 {
   time_t t = time(NULL);
@@ -426,6 +476,8 @@ bool showHelp(char *text)
   printf("  -q: quote;\n");
   printf("  -n: extract numbers;\n");
   printf("  -e: environmen variable;\n");
+  printf("  -f: read file;\n");
+  printf("  -s: save to file copytext.txt;\n");
   printf("  -d: append date;\n");
   printf("  -t: append time;\n");
   printf("  -v: extract value from key=value;\n");

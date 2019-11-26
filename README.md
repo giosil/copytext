@@ -12,6 +12,8 @@ Command line to copy text to clipboard.
 -q: quote;
 -n: extract numbers;
 -e: environmen variable;
+-f: read file;
+-s: save to file copytext.txt;
 -d: append date;
 -t: append time;
 -v: extract value from key=value;
@@ -20,9 +22,9 @@ Command line to copy text to clipboard.
 
 ## Examples
 
-- `copytext hello` - (hello copied)
-- `copytext -u hello` - (HELLO copied)
-- `copytext -q hello` - ('hello' copied)
+- `copytext hello` (hello copied)
+- `copytext -u hello` (HELLO copied)
+- `copytext -q hello` ('hello' copied)
 
 ## Contributors
 
