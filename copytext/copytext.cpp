@@ -560,7 +560,8 @@ void showHelp()
   printf("  -d: append date;\n");
   printf("  -t: append time;\n");
   printf("  -v: extract value from key=value;\n");
-  printf("  -w: prepend current work directory.\n\n");
+  printf("  -w: prepend current work directory;\n");
+  printf("  -i: interactive (stdin).\n\n");
 
   printf("Example:\n\n");
   printf("> copytext -u hello\n");
