@@ -18,7 +18,8 @@ Command line to copy text to clipboard.
 -d: append date;
 -t: append time;
 -v: extract value from key=value;
--w: prepend current work directory.
+-w: prepend current work directory;
+-i: interactive.
 ```
 
 ## Examples

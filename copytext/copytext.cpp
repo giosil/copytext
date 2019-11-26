@@ -14,6 +14,7 @@
 #define OPT_TIME        12
 #define OPT_VALUE       13
 #define OPT_WORK_DIR    14
+#define OPT_INTERACTIVE 15
 
 // Functions Declarations
 
@@ -35,13 +36,14 @@ int indexOf(char *text, char c);
 
 char* readTextFile(char *file, int max);
 bool writeTextFile(const char *file, char *text);
+char* readStdIn(int max);
 
 char* currentDate();
 char* currentTime();
 char* currentWorkDir();
 
-int getOption(char *opt);
-bool showHelp(char *text);
+int getOption(int argc, char* argv[]);
+void showHelp();
 
 // Entry point
 
@@ -53,16 +55,13 @@ int main(int argc, char* argv[])
     exit(1);
   }
 
-  char* opt0 = argc > 2 ? argv[1] : 0;
   char* text = argc > 2 ? argv[2] : argv[1];
 
-  if (showHelp(text)) exit(1);
-
-  int opt = getOption(opt0);
+  int opt = getOption(argc, argv);
   switch (opt)
   {
     case OPT_HELP:
-      showHelp(opt0);
+      showHelp();
       break;
     case OPT_LOWERCASE:
       text = lowercase(text);
@@ -102,6 +101,9 @@ int main(int argc, char* argv[])
       break;
     case OPT_WORK_DIR:
       text = concatPath(currentWorkDir(), text);
+      break;
+    case OPT_INTERACTIVE:
+      text = readStdIn(100);
       break;
   }
 
@@ -428,6 +430,27 @@ bool writeTextFile(const char *file, char *text)
   return true;
 }
 
+char* readStdIn(int max)
+{
+  char *buffer = new char[max];
+
+  fgets(buffer, max, stdin);
+  
+  // If CTRL+C pressed buffer has not \0.
+  int end = 0;
+  for (int i = 0; i < max; i++) {
+    if (buffer[i] == '\0') {
+      end = i;
+      break;
+    }
+  }
+  if (end == 0) {
+    return { '\0' };
+  }
+
+  return trim(buffer);
+}
+
 char* currentDate()
 {
   time_t t = time(NULL);
@@ -461,9 +484,11 @@ char* currentWorkDir()
   return buffer;
 }
 
-int getOption(char *opt)
+int getOption(int argc, char* argv[])
 {
-  if (opt == NULL) return 0;
+  if (argc == 0) return 0;
+  
+  char* opt = argv[1];
 
   int cmp = strcmp(opt, "-h");
   if (cmp == 0) return OPT_HELP;
@@ -476,7 +501,7 @@ int getOption(char *opt)
 
   cmp = strcmp(opt, "-c");
   if (cmp == 0) return OPT_CAPITALIZE;
-
+  
   cmp = strcmp(opt, "-r");
   if (cmp == 0) return OPT_REVERSE;
 
@@ -507,14 +532,14 @@ int getOption(char *opt)
   cmp = strcmp(opt, "-w");
   if (cmp == 0) return OPT_WORK_DIR;
 
+  cmp = strcmp(opt, "-i");
+  if (cmp == 0) return OPT_INTERACTIVE;
+
   return 0;
 }
 
-bool showHelp(char *text)
+void showHelp()
 {
-  int cmp = strcmp(text, "-h");
-  if (cmp != 0) return false;
-
   const char* PRG_NAME = "copytext";
   const int   PRG_VER_MAJ = 1;
   const int   PRG_VER_MIN = 0;
@@ -540,6 +565,4 @@ bool showHelp(char *text)
   printf("Example:\n\n");
   printf("> copytext -u hello\n");
   printf("  (HELLO copied in clipboard)\n\n");
-
-  return true;
 }
