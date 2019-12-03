@@ -298,7 +298,7 @@ char* ltrim(const char *text)
   while (*text != '\0') {
     if (*text > 32) {
       *buffer++ = *text;
-    copy = true;
+      copy = true;
     }
   else if (copy) {
     *buffer++ = *text;
