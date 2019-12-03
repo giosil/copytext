@@ -18,8 +18,8 @@
 
 // Functions Declarations
 
-char* lowercase(char *text);
-char* uppercase(char *text);
+char* lowerCase(char *text);
+char* upperCase(char *text);
 char* capitalize(char *text);
 char* reverse(char *text);
 char* quote(char *text);
@@ -33,6 +33,7 @@ char* removeQuotes(char *text);
 char* value(char *text);
 
 int indexOf(char *text, char c);
+int lastIndexOf(char *text, char c);
 
 char* readTextFile(char *file, int max);
 bool writeTextFile(const char *file, char *text);
@@ -64,10 +65,10 @@ int main(int argc, char* argv[])
       showHelp();
       break;
     case OPT_LOWERCASE:
-      text = lowercase(text);
+      text = lowerCase(text);
       break;
     case OPT_UPPERCASE:
-      text = uppercase(text);
+      text = upperCase(text);
       break;
     case OPT_CAPITALIZE:
       text = capitalize(text);
@@ -122,7 +123,7 @@ int main(int argc, char* argv[])
 
 // Functions Implementation
 
-char* lowercase(char *text)
+char* lowerCase(char *text)
 {
   size_t len = strlen(text);
   if (len == 0) return text;
@@ -137,7 +138,7 @@ char* lowercase(char *text)
   return result;
 }
 
-char* uppercase(char *text)
+char* upperCase(char *text)
 {
   size_t len = strlen(text);
   if (len == 0) return text;
@@ -370,11 +371,24 @@ int indexOf(char *text, char c)
   return -1;
 }
 
+int lastIndexOf(char *text, char c)
+{
+  size_t len = strlen(text);
+  if (len == 0) return -1;
+
+  int j = (int) len;
+  for (int i = 0; i < len; i++) {
+    if (text[--j] == c) return j;
+  }
+
+  return -1;
+}
+
 char* value(char *text)
 {
-  int idx = indexOf(text, '=');
+  int idx = lastIndexOf(text, '=');
   if (idx < 0) {
-    idx = indexOf(text, ':');
+    idx = lastIndexOf(text, ':');
   }
   if (idx < 0) {
     return text;
