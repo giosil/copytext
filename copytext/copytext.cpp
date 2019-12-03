@@ -16,28 +16,48 @@
 #define OPT_WORK_DIR    14
 #define OPT_INTERACTIVE 15
 
-// Functions Declarations
+// Structures declarations
 
-char* lowerCase(char *text);
-char* upperCase(char *text);
-char* capitalize(char *text);
-char* reverse(char *text);
-char* quote(char *text);
-char* numbers(char *text);
-char* concat(char *text1, char *text2);
-char* concatPath(char *text1, char *text2);
-char* trim(char *text);
-char* substring(char *text, int beginIndex, int endIndex);
-char* substring(char *text, int beginIndex);
-char* removeQuotes(char *text);
-char* value(char *text);
+typedef struct _MAP_ENTRY
+{
+  char *key;
+  char *value;
+  int  hashCode;
+  _MAP_ENTRY *next;
 
-int indexOf(char *text, char c);
-int lastIndexOf(char *text, char c);
+} MAP_ENTRY;
 
-char* readTextFile(char *file, int max);
+// Functions declarations
+
+char* lowerCase(const char *text);
+char* upperCase(const char *text);
+char* capitalize(const char *text);
+char* reverse(const char *text);
+char* quote(const char *text);
+char* numbers(const char *text);
+char* concat(const char *text1, const char *text2);
+char* concatPath(const char *text1, const char *text2);
+char* ltrim(const char *text);
+char* rtrim(const char *text);
+char* trim(const char *text);
+char* substring(const char *text, int beginIndex, int endIndex);
+char* substring(const char *text, int beginIndex);
+char* removeQuotes(const char *text);
+
+int indexOf(const char *text, char c);
+int lastIndexOf(const char *text, char c);
+int hashCode(const char *text);
+
+char* readTextFile(const char *file, int max);
 bool writeTextFile(const char *file, char *text);
 char* readStdIn(int max);
+
+char* getKey(const char *text);
+char* getValue(const char *text);
+char* findValue(const char *text);
+
+MAP_ENTRY* loadConfigFile(const char *file);
+MAP_ENTRY* findEntry(const char *key, MAP_ENTRY* entries);
 
 char* currentDate();
 char* currentTime();
@@ -57,7 +77,7 @@ int main(int argc, char* argv[])
   }
 
   char* text = argc > 2 ? argv[2] : argv[1];
-
+  
   int opt = getOption(argc, argv);
   switch (opt)
   {
@@ -98,7 +118,7 @@ int main(int argc, char* argv[])
       text = concat(text, currentTime());
       break;
     case OPT_VALUE:
-      text = value(text);
+      text = findValue(text);
       break;
     case OPT_WORK_DIR:
       text = concatPath(currentWorkDir(), text);
@@ -123,10 +143,10 @@ int main(int argc, char* argv[])
 
 // Functions Implementation
 
-char* lowerCase(char *text)
+char* lowerCase(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return text;
+  if (len == 0) return _strdup("");
 
   char *buffer = new char[len + 1];
   char *result = buffer;
@@ -138,10 +158,10 @@ char* lowerCase(char *text)
   return result;
 }
 
-char* upperCase(char *text)
+char* upperCase(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return text;
+  if (len == 0) return _strdup("");
 
   char *buffer = new char[len + 1];
   char *result = buffer;
@@ -153,10 +173,10 @@ char* upperCase(char *text)
   return result;
 }
 
-char* capitalize(char *text)
+char* capitalize(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return text;
+  if (len == 0) return _strdup("");
 
   int i = 0;
   char *buffer = new char[len + 1];
@@ -175,10 +195,10 @@ char* capitalize(char *text)
   return result;
 }
 
-char* reverse(char *text)
+char* reverse(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return text;
+  if (len == 0) return _strdup("");
 
   char *buffer = new char[len + 1];
   char *result = buffer;
@@ -190,10 +210,10 @@ char* reverse(char *text)
   return result;
 }
 
-char* quote(char *text)
+char* quote(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return text;
+  if (len == 0) return _strdup("");
 
   int count = 0;
   for (int i = 0; i < len; i++) {
@@ -216,10 +236,10 @@ char* quote(char *text)
   return result;
 }
 
-char* numbers(char *text)
+char* numbers(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return text;
+  if (len == 0) return _strdup("");
 
   int count = 0;
   for (int i = 0; i < len; i++) {
@@ -241,7 +261,7 @@ char* numbers(char *text)
   return result;
 }
 
-char* concat(char *text1, char *text2)
+char* concat(const char *text1, const char *text2)
 {
   size_t len1 = strlen(text1);
   size_t len2 = strlen(text2);
@@ -253,7 +273,7 @@ char* concat(char *text1, char *text2)
   return buffer;
 }
 
-char* concatPath(char *text1, char *text2)
+char* concatPath(const char *text1, const char *text2)
 {
   size_t len1 = strlen(text1);
   size_t len2 = strlen(text2);
@@ -266,24 +286,23 @@ char* concatPath(char *text1, char *text2)
   return buffer;
 }
 
-char* trim(char *text)
+char* ltrim(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return text;
+  if (len == 0) return _strdup("");
 
-  int count = 0;
-  for (int i = 0; i < len; i++) {
-    if (text[i] > 32) {
-      count++;
-    }
-  }
-
-  char *buffer = new char[count + 1];
+  char *buffer = new char[len + 1];
   char *result = buffer;
+
+  bool copy = false;
   while (*text != '\0') {
     if (*text > 32) {
       *buffer++ = *text;
+    copy = true;
     }
+  else if (copy) {
+    *buffer++ = *text;
+  }
     text++;
   }
   *buffer = '\0';
@@ -291,58 +310,92 @@ char* trim(char *text)
   return result;
 }
 
-char* substring(char *text, int beginIndex, int endIndex)
+char* rtrim(const char *text)
 {
-  if (beginIndex == endIndex) {
-    return { '\0' };
+  size_t len = strlen(text);
+  if (len == 0) return _strdup("");
+
+  char *buffer = new char[len + 1];
+  char *result = buffer;
+
+  buffer[len] = '\0';
+  bool copy = false;
+  int j = (int)len;
+  for (int i = 0; i < len; i++) {
+    j--;
+    if (text[j] > 32) {
+      buffer[j] = text[j];
+      copy = true;
+    }
+    else if (copy) {
+      buffer[j] = text[j];
+    }
+    else {
+      buffer[j] = '\0';
+    }
   }
 
-  char *buffer = new char[endIndex - beginIndex + 1];
+  return result;
+}
+
+char* trim(const char *text)
+{
+  char *buffer = ltrim(text);
+
+  return rtrim(buffer);
+}
+
+char* substring(const char *text, int beginIndex, int endIndex)
+{
+  if (beginIndex >= endIndex) {
+    return _strdup("");
+  }
+  
+  int len = endIndex - beginIndex;
+  int count = 0;
+
+  char *buffer = new char[len + 1];
   char *result = buffer;
   text += beginIndex;
   while (*text != '\0') {
-    if (*text > 32) {
-      *buffer++ = *text;
-    }
-    text++;
+    *buffer++ = *text++;
+    count++;
+    if (count >= len) break;
   }
   *buffer = '\0';
 
   return result;
 }
 
-char* substring(char *text, int beginIndex)
+char* substring(const char *text, int beginIndex)
 {
   size_t endIndex = strlen(text);
 
-  if (beginIndex == endIndex) {
-    return { '\0' };
+  if (beginIndex >= endIndex) {
+    return _strdup("");
   }
 
   char *buffer = new char[endIndex - beginIndex + 1];
   char *result = buffer;
   text += beginIndex;
   while (*text != '\0') {
-    if (*text > 32) {
-      *buffer++ = *text;
-    }
-    text++;
+    *buffer++ = *text++;
   }
   *buffer = '\0';
 
   return result;
 }
 
-char* removeQuotes(char *text)
+char* removeQuotes(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return text;
+  if (len == 0) return _strdup("");
 
   if (text[0] != '\'' && text[0] != '"') {
-    return text;
+    return _strdup(text);
   }
   if (text[len - 1] != '\'' && text[len - 1] != '"') {
-    return text;
+    return _strdup(text);
   }
   
   int i = 0;
@@ -359,7 +412,7 @@ char* removeQuotes(char *text)
   return result;
 }
 
-int indexOf(char *text, char c)
+int indexOf(const char *text, char c)
 {
   size_t len = strlen(text);
   if (len == 0) return -1;
@@ -371,7 +424,7 @@ int indexOf(char *text, char c)
   return -1;
 }
 
-int lastIndexOf(char *text, char c)
+int lastIndexOf(const char *text, char c)
 {
   size_t len = strlen(text);
   if (len == 0) return -1;
@@ -384,32 +437,26 @@ int lastIndexOf(char *text, char c)
   return -1;
 }
 
-char* value(char *text)
+int hashCode(const char *text)
 {
-  int idx = lastIndexOf(text, '=');
-  if (idx < 0) {
-    idx = lastIndexOf(text, ':');
+  size_t len = strlen(text);
+  if (len == 0) return 0;
+
+  int i = 0, h = 0;
+  while (i < len) {
+    h = (h << 5) - h + text[i++] | 0;
   }
-  if (idx < 0) {
-    return text;
-  }
-  
-  char *sub = substring(text, idx + 1);
 
-  char *trm = trim(sub);
-
-  char *result = removeQuotes(trm);
-
-  return result;
+  return h;
 }
 
-char* readTextFile(char *file, int max)
+char* readTextFile(const char *file, int max)
 {
   FILE *fp = fopen(file, "r");
 
   if (fp == NULL) {
     printf("File %s not found", file);
-    return {'\0'};
+    return _strdup("");
   }
 
   if (max == 0) max = 255;
@@ -459,10 +506,146 @@ char* readStdIn(int max)
     }
   }
   if (end == 0) {
-    return { '\0' };
+    return _strdup("");
   }
 
   return trim(buffer);
+}
+
+char* getKey(const char *text)
+{
+  int idx = lastIndexOf(text, '=');
+  if (idx < 0) {
+    idx = lastIndexOf(text, ':');
+  }
+  if (idx < 0) {
+    return _strdup("");
+  }
+
+  char *sub = substring(text, 0, idx);
+
+  char *result = trim(sub);
+
+  return result;
+}
+
+char* getValue(const char *text)
+{
+  int idx = lastIndexOf(text, '=');
+  if (idx < 0) {
+    idx = lastIndexOf(text, ':');
+  }
+  if (idx < 0) {
+    return _strdup(text);
+  }
+
+  char *sub = substring(text, idx + 1);
+
+  char *trm = trim(sub);
+
+  char *result = removeQuotes(trm);
+
+  return result;
+}
+
+MAP_ENTRY* loadConfigFile(const char *file)
+{
+  MAP_ENTRY *entries = new MAP_ENTRY[101];
+  MAP_ENTRY *result = entries;
+
+  char *content = readTextFile(file, 4096);
+
+  size_t len = strlen(content);
+
+  int c = 0;
+  int r = 0;
+  char *row = new char[120];
+  for (int i = 0; i < len; i++) {
+    if (content[i] == 10) { // [LF]
+      // End row
+      row[c] = '\0';
+      if (row[0] != '\0' && row[0] != '#') {
+        char *key = getKey(row);
+        size_t lenKey = strlen(key);
+        if (lenKey > 0) {
+          char *val = getValue(row);
+          int hash = hashCode(key);
+
+          MAP_ENTRY *entry = new MAP_ENTRY;
+          entry->key = key;
+          entry->value = val;
+          entry->hashCode = hash;
+          entry->next = NULL;
+
+          entries[r] = *entry;
+          if (r > 0) {
+            entries[r - 1].next = &entries[r];
+          }
+          r++;
+        }
+      }
+      if (r >= 100) break;
+      row = new char[120];
+      c = 0;
+    }
+    else if(content[i] > 31) {
+      row[c++] = content[i];
+    }
+  }
+
+  MAP_ENTRY *empty = new MAP_ENTRY;
+  empty->key = _strdup("");
+  empty->value = _strdup("");
+  empty->hashCode = 0;
+  empty->next = NULL;
+
+  entries[r] = *empty;
+  if (r > 0) {
+    entries[r - 1].next = &entries[r];
+  }
+
+  return result;
+}
+
+MAP_ENTRY* findEntry(const char *key, MAP_ENTRY* entries)
+{
+  int keyHashCode = hashCode(key);
+
+  while (true) {
+    int entryHashCode = entries->hashCode;
+    if (entryHashCode == 0) {
+      return entries;
+    }
+    if (entryHashCode == keyHashCode) {
+      return entries;
+    }
+    if (entries->next) {
+      *entries = *entries->next;
+    }
+    else {
+      break;
+    }
+  }
+  return entries;
+}
+
+char* findValue(const char *text)
+{
+  int sep = indexOf(text, '@');
+  if (sep <= 0) {
+    return getValue(text);
+  }
+
+  char* key = substring(text, 0, sep);
+  char* cfg = substring(text, sep + 1);
+
+  MAP_ENTRY *entries = loadConfigFile(cfg);
+  MAP_ENTRY *entry = findEntry(key, entries);
+  
+  if (entry->hashCode) {
+    return entry->value;
+  }
+  return _strdup("");
 }
 
 char* currentDate()
