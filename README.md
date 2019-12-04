@@ -19,7 +19,8 @@ Command line to copy text to clipboard.
 -t: append time;
 -v: extract value from key=value;
 -w: prepend current work directory;
--i: interactive.
+-i: interactive;
+-z: test.
 ```
 
 ## Examples
