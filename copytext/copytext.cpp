@@ -15,6 +15,7 @@
 #define OPT_VALUE       13
 #define OPT_WORK_DIR    14
 #define OPT_INTERACTIVE 15
+#define OPT_TEST        16
 
 // Structures declarations
 
@@ -56,8 +57,11 @@ char* getKey(const char *text);
 char* getValue(const char *text);
 char* findValue(const char *text);
 
+MAP_ENTRY* parseConfig(const char *text);
 MAP_ENTRY* loadConfigFile(const char *file);
+MAP_ENTRY* cloneEntry(MAP_ENTRY* entry);
 MAP_ENTRY* findEntry(const char *key, MAP_ENTRY* entries);
+void printEntries(MAP_ENTRY* entries);
 
 char* currentDate();
 char* currentTime();
@@ -65,6 +69,7 @@ char* currentWorkDir();
 
 int getOption(int argc, char* argv[]);
 void showHelp();
+char* test();
 
 // Entry point
 
@@ -126,6 +131,9 @@ int main(int argc, char* argv[])
     case OPT_INTERACTIVE:
       text = readStdIn(100);
       break;
+  case OPT_TEST:
+      text = test();
+      break;
   }
 
   GLOBALHANDLE hGlobal = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT | GMEM_SHARE, 1024);
@@ -178,17 +186,20 @@ char* capitalize(const char *text)
   size_t len = strlen(text);
   if (len == 0) return _strdup("");
 
-  int i = 0;
+  bool first = true;
   char *buffer = new char[len + 1];
   char *result = buffer;
   while (*text != '\0') {
-    if (i == 0) {
+  if (*text < 64) {
+      *buffer++ = *text++;
+  }
+    else if (first) {
       *buffer++ = toupper(*text++);
+    first = false;
     }
     else {
       *buffer++ = tolower(*text++);
     }
-    i++;
   }
   *buffer = '\0';
 
@@ -548,20 +559,17 @@ char* getValue(const char *text)
   return result;
 }
 
-MAP_ENTRY* loadConfigFile(const char *file)
+MAP_ENTRY* parseConfig(const char *text)
 {
   MAP_ENTRY *entries = new MAP_ENTRY[101];
   MAP_ENTRY *result = entries;
 
-  char *content = readTextFile(file, 4096);
-
-  size_t len = strlen(content);
-
+  size_t len = strlen(text);
   int c = 0;
   int r = 0;
   char *row = new char[120];
-  for (int i = 0; i < len; i++) {
-    if (content[i] == 10) { // [LF]
+  for (int i = 0; i < len + 1; i++) {
+    if (text[i] == 10 || text[i] == 0) { // [LF],[\0]
       // End row
       row[c] = '\0';
       if (row[0] != '\0' && row[0] != '#') {
@@ -588,8 +596,8 @@ MAP_ENTRY* loadConfigFile(const char *file)
       row = new char[120];
       c = 0;
     }
-    else if(content[i] > 31) {
-      row[c++] = content[i];
+    else if (text[i] > 31) {
+      row[c++] = text[i];
     }
   }
 
@@ -603,6 +611,23 @@ MAP_ENTRY* loadConfigFile(const char *file)
   if (r > 0) {
     entries[r - 1].next = &entries[r];
   }
+  return result;
+}
+
+MAP_ENTRY* loadConfigFile(const char *file)
+{
+  char *text = readTextFile(file, 4096);
+
+  return parseConfig(text);
+}
+
+MAP_ENTRY* cloneEntry(MAP_ENTRY* entry)
+{
+  MAP_ENTRY* result = new MAP_ENTRY;
+  result->key = entry->key;
+  result->value = entry->value;
+  result->hashCode = entry->hashCode;
+  result->next = entry->next;
 
   return result;
 }
@@ -611,22 +636,41 @@ MAP_ENTRY* findEntry(const char *key, MAP_ENTRY* entries)
 {
   int keyHashCode = hashCode(key);
 
+  // Clone to not change the pointer
+  MAP_ENTRY* entry = cloneEntry(entries);
   while (true) {
-    int entryHashCode = entries->hashCode;
+    int entryHashCode = entry->hashCode;
     if (entryHashCode == 0) {
-      return entries;
+      return entry;
     }
     if (entryHashCode == keyHashCode) {
-      return entries;
+      return entry;
     }
-    if (entries->next) {
-      *entries = *entries->next;
+    if (entry->next) {
+      *entry = *entry->next;
     }
     else {
       break;
     }
   }
-  return entries;
+  // Unlikely, but you can't return NULL
+  return entry;
+}
+
+void printEntries(MAP_ENTRY* entries)
+{
+  // Clone to not change the pointer
+  MAP_ENTRY* entry = cloneEntry(entries);
+  while (true) {
+    if (entry->hashCode == 0) break;
+    printf("key=\"%s\",\tvalue=\"%s\",\thashCode=%d\n", entry->key, entry->value, entry->hashCode);
+    if (entry->next) {
+      *entry = *entry->next;
+    }
+    else {
+      break;
+    }
+  }
 }
 
 char* findValue(const char *text)
@@ -732,6 +776,9 @@ int getOption(int argc, char* argv[])
   cmp = strcmp(opt, "-i");
   if (cmp == 0) return OPT_INTERACTIVE;
 
+  cmp = strcmp(opt, "-z");
+  if (cmp == 0) return OPT_TEST;
+
   return 0;
 }
 
@@ -758,9 +805,44 @@ void showHelp()
   printf("  -t: append time;\n");
   printf("  -v: extract value from key=value;\n");
   printf("  -w: prepend current work directory;\n");
-  printf("  -i: interactive (stdin).\n\n");
+  printf("  -i: interactive (stdin);\n");
+  printf("  -z: test.\n\n");
 
   printf("Example:\n\n");
   printf("> copytext -u hello\n");
   printf("  (HELLO copied in clipboard)\n\n");
+}
+
+char* test()
+{
+  char *text = _strdup(" heLL0 ");
+  printf("lowerCase(\"%s\") -> \"%s\"\n", text, lowerCase(text));
+  printf("upperCase(\"%s\") -> \"%s\"\n", text, upperCase(text));
+  printf("capitalize(\"%s\") -> \"%s\"\n", text, capitalize(text));
+  printf("reverse(\"%s\") -> \"%s\"\n", text, reverse(text));
+  printf("quote(\"%s\") -> \"%s\"\n", text, quote(text));
+  printf("numbers(\"%s\") -> \"%s\"\n", text, quote(text));
+  printf("concat(\"%s\",\"%s\") -> \"%s\"\n", text, text, concat(text, text));
+  printf("concatPath(\"%s\",\"%s\") -> \"%s\"\n", text, text, concatPath(text, text));
+  printf("ltrim(\"%s\") -> \"%s\"\n", text, ltrim(text));
+  printf("rtrim(\"%s\") -> \"%s\"\n", text, rtrim(text));
+  printf("trim(\"%s\") -> \"%s\"\n", text, trim(text));
+  printf("substring(\"%s\", 1, 3) -> \"%s\"\n", text, substring(text,1,3));
+  printf("substring(\"%s\", 1) -> \"%s\"\n", text, substring(text,1));
+  printf("indexOf(\"%s\",'L') -> %d\n", text, indexOf(text, 'L'));
+  printf("lastIndexOf(\"%s\",'L') -> %d\n", text, lastIndexOf(text, 'L'));
+  printf("hashCode(\"%s\") -> %d\n", text, hashCode(text));
+
+  text = _strdup("# Comment\nname=Clark\nsurname=Kent\ngender=M");
+  printf("\nparseConfig...\n");
+
+  MAP_ENTRY *entries = parseConfig(text);
+  printEntries(entries);
+
+  MAP_ENTRY *entry = findEntry("name", entries);
+  printf("findEntry(\"name\", entries) -> entry.value=\"%s\"\n", entry->value);
+  entry = findEntry("surname", entries);
+  printf("findEntry(\"surname\", entries) -> entry.value=\"%s\"\n", entry->value);
+
+  return _strdup("test");
 }
