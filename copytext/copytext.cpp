@@ -662,7 +662,9 @@ MAP_ENTRY* loadConfigFile(const char *file)
 
 MAP_ENTRY* cloneEntry(MAP_ENTRY* entry)
 {
-  MAP_ENTRY* result = new MAP_ENTRY;
+  // MAP_ENTRY* result = new MAP_ENTRY; // it's the same 
+  MAP_ENTRY* result = (MAP_ENTRY*)malloc(sizeof(MAP_ENTRY));
+  
   result->key = entry->key;
   result->value = entry->value;
   result->hashCode = entry->hashCode;
@@ -700,6 +702,7 @@ void printEntries(MAP_ENTRY* entries)
 {
   // Clone to not change the pointer
   MAP_ENTRY* entry = cloneEntry(entries);
+  
   while (true) {
     if (entry->hashCode == 0) break;
     printf("key=\"%s\",\tvalue=\"%s\",\thashCode=%d\n", entry->key, entry->value, entry->hashCode);
@@ -710,10 +713,16 @@ void printEntries(MAP_ENTRY* entries)
       break;
     }
   }
+
+  free(entry);
 }
 
 char* findValue(const char *text)
 {
+  int kvs = indexOf(text, '=');
+  if (kvs >= 0) {
+    return getValue(text);
+  }
   int sep = indexOf(text, '@');
   if (sep <= 0) {
     return getValue(text);
@@ -881,10 +890,13 @@ char* test()
   MAP_ENTRY *entries = parseConfig(text);
   printEntries(entries);
 
-  MAP_ENTRY *entry = findEntry("name", entries);
-  printf("findEntry(\"name\", entries) -> entry.value=\"%s\"\n", entry->value);
-  entry = findEntry("surname", entries);
+  MAP_ENTRY *entry = findEntry("surname", entries);
   printf("findEntry(\"surname\", entries) -> entry.value=\"%s\"\n", entry->value);
+  free(entry);
+  
+  entry = findEntry("name", entries);
+  printf("findEntry(\"name\", entries) -> entry.value=\"%s\"\n", entry->value);
+  free(entry);
 
   return _strdup("test");
 }
