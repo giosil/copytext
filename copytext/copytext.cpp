@@ -41,6 +41,8 @@ char* concatPath(const char *text1, const char *text2);
 char* ltrim(const char *text);
 char* rtrim(const char *text);
 char* trim(const char *text);
+char* lpad(const char *text, char c, int length);
+char* rpad(const char *text, char c, int length);
 char* substring(const char *text, int beginIndex, int endIndex);
 char* substring(const char *text, int beginIndex);
 char* removeQuotes(const char *text);
@@ -190,12 +192,12 @@ char* capitalize(const char *text)
   char *buffer = new char[len + 1];
   char *result = buffer;
   while (*text != '\0') {
-  if (*text < 64) {
+    if (*text < 64) {
       *buffer++ = *text++;
-  }
+    }
     else if (first) {
       *buffer++ = toupper(*text++);
-    first = false;
+      first = false;
     }
     else {
       *buffer++ = tolower(*text++);
@@ -354,6 +356,43 @@ char* trim(const char *text)
   char *buffer = ltrim(text);
 
   return rtrim(buffer);
+}
+
+char* lpad(const char *text, char c, int length)
+{
+  size_t len = strlen(text);
+  if (len >= length) return _strdup(text);
+
+  char *buffer = new char[length + 1];
+  char *result = buffer;
+
+  int d = length - (int) len;
+  for (int i = 0; i < d; i++) {
+    *buffer++ = c;
+  }
+  strcpy(buffer, text);
+
+  return result;
+}
+
+char* rpad(const char *text, char c, int length)
+{
+  size_t len = strlen(text);
+  if (len >= length) return _strdup(text);
+
+  char *buffer = new char[length + 1];
+  char *result = buffer;
+
+  while (*text != '\0') {
+    *buffer++ = *text++;
+  }
+  int d = length - (int) len;
+  for (int i = 0; i < d; i++) {
+    *buffer++ = c;
+  }
+  *buffer = '\0';
+
+  return result;
 }
 
 char* substring(const char *text, int beginIndex, int endIndex)
@@ -798,6 +837,7 @@ void showHelp()
   printf("  -r: reverse;\n");
   printf("  -q: quote;\n");
   printf("  -n: extract numbers;\n");
+  printf("  -p: numbers with padding;\n");
   printf("  -e: environment variable;\n");
   printf("  -f: read file;\n");
   printf("  -s: save to file copytext.txt;\n");
@@ -821,12 +861,14 @@ char* test()
   printf("capitalize(\"%s\") -> \"%s\"\n", text, capitalize(text));
   printf("reverse(\"%s\") -> \"%s\"\n", text, reverse(text));
   printf("quote(\"%s\") -> \"%s\"\n", text, quote(text));
-  printf("numbers(\"%s\") -> \"%s\"\n", text, quote(text));
+  printf("numbers(\"%s\") -> \"%s\"\n", text, numbers(text));
   printf("concat(\"%s\",\"%s\") -> \"%s\"\n", text, text, concat(text, text));
   printf("concatPath(\"%s\",\"%s\") -> \"%s\"\n", text, text, concatPath(text, text));
   printf("ltrim(\"%s\") -> \"%s\"\n", text, ltrim(text));
   printf("rtrim(\"%s\") -> \"%s\"\n", text, rtrim(text));
   printf("trim(\"%s\") -> \"%s\"\n", text, trim(text));
+  printf("lpad(\"%s\", '-', 10) -> \"%s\"\n", text, lpad(text, '-', 10));
+  printf("rpad(\"%s\", '-', 10) -> \"%s\"\n", text, rpad(text, '-', 10));
   printf("substring(\"%s\", 1, 3) -> \"%s\"\n", text, substring(text,1,3));
   printf("substring(\"%s\", 1) -> \"%s\"\n", text, substring(text,1));
   printf("indexOf(\"%s\",'L') -> %d\n", text, indexOf(text, 'L'));
