@@ -313,9 +313,9 @@ char* ltrim(const char *text)
       *buffer++ = *text;
       copy = true;
     }
-  else if (copy) {
-    *buffer++ = *text;
-  }
+    else if (copy) {
+      *buffer++ = *text;
+    }
     text++;
   }
   *buffer = '\0';
@@ -662,8 +662,8 @@ MAP_ENTRY* loadConfigFile(const char *file)
 
 MAP_ENTRY* cloneEntry(MAP_ENTRY* entry)
 {
-  // MAP_ENTRY* result = new MAP_ENTRY; // it's the same 
-  MAP_ENTRY* result = (MAP_ENTRY*)malloc(sizeof(MAP_ENTRY));
+  // MAP_ENTRY* result = new MAP_ENTRY; // C++ 
+  MAP_ENTRY* result = (MAP_ENTRY*) malloc(sizeof(MAP_ENTRY));
   
   result->key = entry->key;
   result->value = entry->value;
@@ -677,44 +677,43 @@ MAP_ENTRY* findEntry(const char *key, MAP_ENTRY* entries)
 {
   int keyHashCode = hashCode(key);
 
-  // Clone to not change the pointer
-  MAP_ENTRY* entry = cloneEntry(entries);
+  MAP_ENTRY* entry = entries;
   while (true) {
     int entryHashCode = entry->hashCode;
     if (entryHashCode == 0) {
+      // Last entry
       return entry;
     }
     if (entryHashCode == keyHashCode) {
       return entry;
     }
     if (entry->next) {
-      *entry = *entry->next;
+      entry = entry->next;
     }
     else {
       break;
     }
   }
-  // Unlikely, but you can't return NULL
   return entry;
 }
 
 void printEntries(MAP_ENTRY* entries)
-{
-  // Clone to not change the pointer
-  MAP_ENTRY* entry = cloneEntry(entries);
-  
+{ 
+  const int WIDTH = 25;
+  MAP_ENTRY* entry = entries;
+  printf("%s%s%s\n", rpad("Key", ' ', WIDTH), rpad("Value", ' ', WIDTH), "Hashcode");
+  printf("%s%s%s\n", rpad("", '-', WIDTH), rpad("", '-', WIDTH), "-----------");
   while (true) {
+    // Check Last entry
     if (entry->hashCode == 0) break;
-    printf("key=\"%s\",\tvalue=\"%s\",\thashCode=%d\n", entry->key, entry->value, entry->hashCode);
+    printf("%s%s%d\n", rpad(entry->key, ' ', WIDTH), rpad(entry->value, ' ', WIDTH), entry->hashCode);
     if (entry->next) {
-      *entry = *entry->next;
+      entry = entry->next;
     }
     else {
       break;
     }
   }
-
-  free(entry);
 }
 
 char* findValue(const char *text)
@@ -884,19 +883,19 @@ char* test()
   printf("lastIndexOf(\"%s\",'L') -> %d\n", text, lastIndexOf(text, 'L'));
   printf("hashCode(\"%s\") -> %d\n", text, hashCode(text));
 
-  text = _strdup("# Comment\nname=Clark\nsurname=Kent\ngender=M");
+  text = _strdup("# Comment\nname=Clark\nsurname=Kent\ngender=M\ncity=Metropolis\nnickname=Superman");
   printf("\nparseConfig...\n");
 
   MAP_ENTRY *entries = parseConfig(text);
   printEntries(entries);
 
-  MAP_ENTRY *entry = findEntry("surname", entries);
-  printf("findEntry(\"surname\", entries) -> entry.value=\"%s\"\n", entry->value);
-  free(entry);
+  printf("\n");
+
+  MAP_ENTRY *entry = findEntry("city", entries);
+  printf("findEntry(\"city\", entries) -> entry.value=\"%s\"\n", entry->value);
   
   entry = findEntry("name", entries);
   printf("findEntry(\"name\", entries) -> entry.value=\"%s\"\n", entry->value);
-  free(entry);
 
   return _strdup("test");
 }
