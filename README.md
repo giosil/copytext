@@ -2,6 +2,11 @@
 
 Command line to copy text to clipboard.
 
+## Build
+
+- `git clone https://github.com/giosil/copytext.git`
+- `gcc ./copytext/copytext.c -o copytext`
+
 ## Options available
 
 ```

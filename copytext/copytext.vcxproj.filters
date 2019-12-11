@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="copytext.cpp">
+    <ClCompile Include="copytext.c">
       <Filter>File di origine</Filter>
     </ClCompile>
   </ItemGroup>

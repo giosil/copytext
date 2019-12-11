@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 #include <time.h>
 #include <tchar.h>
 
@@ -30,7 +32,7 @@ typedef struct _MAP_ENTRY
   char *key;
   char *value;
   int  hashCode;
-  _MAP_ENTRY *next;
+  struct _MAP_ENTRY *next;
 
 } MAP_ENTRY;
 
@@ -50,7 +52,6 @@ char* trim(const char *text);
 char* lpad(const char *text, char c, int length);
 char* rpad(const char *text, char c, int length);
 char* substring(const char *text, int beginIndex, int endIndex);
-char* substring(const char *text, int beginIndex);
 char* removeQuotes(const char *text);
 
 int indexOf(const char *text, char c);
@@ -58,7 +59,7 @@ int lastIndexOf(const char *text, char c);
 int hashCode(const char *text);
 
 char* readTextFile(const char *file, int max);
-bool writeTextFile(const char *file, char *text);
+short writeTextFile(const char *file, char *text);
 char* readStdIn(int max);
 
 char* getKey(const char *text);
@@ -145,8 +146,8 @@ int main(int argc, char* argv[])
   }
 
   GLOBALHANDLE hGlobal = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT | GMEM_SHARE, 1024);
-  int* pGlobal = (int*)GlobalLock(hGlobal);
-  strcpy_s((char *)pGlobal, 1024, text);
+  char *pGlobal = (char*)GlobalLock(hGlobal);
+  strcpy(pGlobal, text);
   GlobalUnlock(hGlobal);
 
   OpenClipboard(0);
@@ -164,7 +165,8 @@ char* lowerCase(const char *text)
   size_t len = strlen(text);
   if (len == 0) return _strdup("");
 
-  char *buffer = new char[len + 1];
+  // char *buffer = new char[len + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (len + 1));
   char *result = buffer;
   while (*text != '\0') {
     *buffer++ = tolower(*text++);
@@ -179,7 +181,8 @@ char* upperCase(const char *text)
   size_t len = strlen(text);
   if (len == 0) return _strdup("");
 
-  char *buffer = new char[len + 1];
+  // char *buffer = new char[len + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (len + 1));
   char *result = buffer;
   while (*text != '\0') {
     *buffer++ = toupper(*text++);
@@ -194,8 +197,10 @@ char* capitalize(const char *text)
   size_t len = strlen(text);
   if (len == 0) return _strdup("");
 
-  bool first = true;
-  char *buffer = new char[len + 1];
+  // bool first = true; // Not supported by ISO C90
+  short first = 1;
+  // char *buffer = new char[len + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (len + 1));
   char *result = buffer;
   while (*text != '\0') {
     if (*text < 64) {
@@ -203,7 +208,7 @@ char* capitalize(const char *text)
     }
     else if (first) {
       *buffer++ = toupper(*text++);
-      first = false;
+      first = 0;
     }
     else {
       *buffer++ = tolower(*text++);
@@ -219,7 +224,8 @@ char* reverse(const char *text)
   size_t len = strlen(text);
   if (len == 0) return _strdup("");
 
-  char *buffer = new char[len + 1];
+  // char *buffer = new char[len + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (len + 1));
   char *result = buffer;
   for (int i = 0; i < len; i++) {
     *buffer++ = text[len - 1 - i];
@@ -241,7 +247,8 @@ char* quote(const char *text)
     }
   }
 
-  char *buffer = new char[len + 1 + 2 + count];
+  // char *buffer = new char[len + 1 + 2 + count];
+  char *buffer = (char*)malloc(sizeof(char) * (len + 1 + 2 + count));
   char *result = buffer;
   *buffer++ = '\'';
   while (*text != '\0') {
@@ -267,7 +274,8 @@ char* numbers(const char *text)
     }
   }
 
-  char *buffer = new char[count + 1];
+  // char *buffer = new char[count + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (count + 1));
   char *result = buffer;
   while (*text != '\0') {
     if (*text >= 48 && *text <= 57) {
@@ -285,7 +293,8 @@ char* concat(const char *text1, const char *text2)
   size_t len1 = strlen(text1);
   size_t len2 = strlen(text2);
 
-  char *buffer = new char[len1 + len2 + 1];
+  // char *buffer = new char[len1 + len2 + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (len1 + len2 + 1));
   strcpy(buffer, text1);
   strcat(buffer, text2);
 
@@ -296,10 +305,13 @@ char* concatPath(const char *text1, const char *text2)
 {
   size_t len1 = strlen(text1);
   size_t len2 = strlen(text2);
+  
+  char c0 = len1 > 0 ? text1[0] : '\0';
 
-  char *buffer = new char[len1 + len2 + 2];
+  // char *buffer = new char[len1 + len2 + 2];
+  char *buffer = (char*)malloc(sizeof(char) * (len1 + len2 + 2));
   strcpy(buffer, text1);
-  strcat(buffer, "\\");
+  strcat(buffer, c0 == '/' ? "/" : "\\");
   strcat(buffer, text2);
 
   return buffer;
@@ -310,14 +322,16 @@ char* ltrim(const char *text)
   size_t len = strlen(text);
   if (len == 0) return _strdup("");
 
-  char *buffer = new char[len + 1];
+  // char *buffer = new char[len + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (len + 1));
   char *result = buffer;
 
-  bool copy = false;
+  // bool copy = false; // Not supported by ISO C90
+  short copy = 0;
   while (*text != '\0') {
     if (*text > 32) {
       *buffer++ = *text;
-      copy = true;
+      copy = 1;
     }
     else if (copy) {
       *buffer++ = *text;
@@ -334,17 +348,19 @@ char* rtrim(const char *text)
   size_t len = strlen(text);
   if (len == 0) return _strdup("");
 
-  char *buffer = new char[len + 1];
+  // char *buffer = new char[len + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (len + 1));
   char *result = buffer;
 
   buffer[len] = '\0';
-  bool copy = false;
+  // bool copy = false; // Not supported by ISO C90
+  short copy = 0;
   int j = (int)len;
   for (int i = 0; i < len; i++) {
     j--;
     if (text[j] > 32) {
       buffer[j] = text[j];
-      copy = true;
+      copy = 1;
     }
     else if (copy) {
       buffer[j] = text[j];
@@ -369,7 +385,8 @@ char* lpad(const char *text, char c, int length)
   size_t len = strlen(text);
   if (len >= length) return _strdup(text);
 
-  char *buffer = new char[length + 1];
+  // char *buffer = new char[length + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (length + 1));
   char *result = buffer;
 
   int d = length - (int) len;
@@ -386,7 +403,8 @@ char* rpad(const char *text, char c, int length)
   size_t len = strlen(text);
   if (len >= length) return _strdup(text);
 
-  char *buffer = new char[length + 1];
+  // char *buffer = new char[length + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (length + 1));
   char *result = buffer;
 
   while (*text != '\0') {
@@ -403,6 +421,10 @@ char* rpad(const char *text, char c, int length)
 
 char* substring(const char *text, int beginIndex, int endIndex)
 {
+  // Overloading not supported in C (but supported in C++)
+  if (endIndex == -1) {
+    endIndex = (int)strlen(text);
+  }
   if (beginIndex >= endIndex) {
     return _strdup("");
   }
@@ -410,32 +432,14 @@ char* substring(const char *text, int beginIndex, int endIndex)
   int len = endIndex - beginIndex;
   int count = 0;
 
-  char *buffer = new char[len + 1];
+  // char *buffer = new char[len + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (len + 1));
   char *result = buffer;
   text += beginIndex;
   while (*text != '\0') {
     *buffer++ = *text++;
     count++;
     if (count >= len) break;
-  }
-  *buffer = '\0';
-
-  return result;
-}
-
-char* substring(const char *text, int beginIndex)
-{
-  size_t endIndex = strlen(text);
-
-  if (beginIndex >= endIndex) {
-    return _strdup("");
-  }
-
-  char *buffer = new char[endIndex - beginIndex + 1];
-  char *result = buffer;
-  text += beginIndex;
-  while (*text != '\0') {
-    *buffer++ = *text++;
   }
   *buffer = '\0';
 
@@ -455,7 +459,8 @@ char* removeQuotes(const char *text)
   }
   
   int i = 0;
-  char *buffer = new char[len - 2 + 1];
+  // char *buffer = new char[len - 2 + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (len - 2 + 1));
   char *result = buffer;
   text++;
   while (*text != '\0') {
@@ -517,7 +522,8 @@ char* readTextFile(const char *file, int max)
 
   if (max == 0) max = 255;
 
-  char *buffer = new char[max + 1];
+  // char *buffer = new char[max + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (max + 1));
 
   int i = 0;
   char c;
@@ -532,24 +538,25 @@ char* readTextFile(const char *file, int max)
   return buffer;
 }
 
-bool writeTextFile(const char *file, char *text)
+short writeTextFile(const char *file, char *text)
 {
   FILE *fp = fopen(file, "w");
 
   if (fp == NULL) {
-    return false;
+    return 0;
   }
 
   fprintf(fp, "%s", text);
 
   fclose(fp);
 
-  return true;
+  return 1;
 }
 
 char* readStdIn(int max)
 {
-  char *buffer = new char[max];
+  // char *buffer = new char[max];
+  char *buffer = (char*)malloc(sizeof(char) * (max + 1));
 
   fgets(buffer, max, stdin);
   
@@ -595,7 +602,7 @@ char* getValue(const char *text)
     return _strdup(text);
   }
 
-  char *sub = substring(text, idx + 1);
+  char *sub = substring(text, idx + 1, -1);
 
   char *trm = trim(sub);
 
@@ -606,13 +613,15 @@ char* getValue(const char *text)
 
 MAP_ENTRY* parseConfig(const char *text)
 {
-  MAP_ENTRY *entries = new MAP_ENTRY[101];
+  // MAP_ENTRY *entries = new MAP_ENTRY[101]; // "new" is not C
+  MAP_ENTRY *entries = (MAP_ENTRY*)malloc(sizeof(MAP_ENTRY) * 100);
   MAP_ENTRY *result = entries;
 
   size_t len = strlen(text);
   int c = 0;
   int r = 0;
-  char *row = new char[120];
+  // char *row = new char[121];
+  char *row = (char*)malloc(sizeof(char) * 121);
   for (int i = 0; i < len + 1; i++) {
     if (text[i] == 10 || text[i] == 0) { // [LF],[\0]
       // End row
@@ -624,21 +633,19 @@ MAP_ENTRY* parseConfig(const char *text)
           char *val = getValue(row);
           int hash = hashCode(key);
 
-          MAP_ENTRY *entry = new MAP_ENTRY;
-          entry->key = key;
-          entry->value = val;
-          entry->hashCode = hash;
-          entry->next = NULL;
-
-          entries[r] = *entry;
-          if (r > 0) {
+		  entries[r].key = key;
+		  entries[r].value = val;
+		  entries[r].hashCode = hash;
+		  entries[r].next = NULL;
+		  if (r > 0) {
             entries[r - 1].next = &entries[r];
           }
           r++;
         }
       }
       if (r >= 100) break;
-      row = new char[120];
+      // row = new char[121];
+	  row = (char*)malloc(sizeof(char) * 121);
       c = 0;
     }
     else if (text[i] > 31) {
@@ -646,13 +653,10 @@ MAP_ENTRY* parseConfig(const char *text)
     }
   }
 
-  MAP_ENTRY *empty = new MAP_ENTRY;
-  empty->key = _strdup("");
-  empty->value = _strdup("");
-  empty->hashCode = 0;
-  empty->next = NULL;
-
-  entries[r] = *empty;
+  entries[r].key = _strdup("");
+  entries[r].value = _strdup("");
+  entries[r].hashCode = 0;
+  entries[r].next = NULL;
   if (r > 0) {
     entries[r - 1].next = &entries[r];
   }
@@ -684,7 +688,7 @@ MAP_ENTRY* findEntry(const char *key, MAP_ENTRY* entries)
   int keyHashCode = hashCode(key);
 
   MAP_ENTRY* entry = entries;
-  while (true) {
+  while (1) {
     int entryHashCode = entry->hashCode;
     if (entryHashCode == 0) {
       // Last entry
@@ -709,7 +713,7 @@ void printEntries(MAP_ENTRY* entries)
   MAP_ENTRY* entry = entries;
   printf("%s%s%s\n", rpad("Key", ' ', WIDTH), rpad("Value", ' ', WIDTH), "Hashcode");
   printf("%s%s%s\n", rpad("", '-', WIDTH), rpad("", '-', WIDTH), "-----------");
-  while (true) {
+  while (1) {
     // Check Last entry
     if (entry->hashCode == 0) break;
     printf("%s%s%d\n", rpad(entry->key, ' ', WIDTH), rpad(entry->value, ' ', WIDTH), entry->hashCode);
@@ -734,7 +738,7 @@ char* findValue(const char *text)
   }
 
   char* key = substring(text, 0, sep);
-  char* cfg = substring(text, sep + 1);
+  char* cfg = substring(text, sep + 1, -1);
 
   MAP_ENTRY *entries = loadConfigFile(cfg);
   MAP_ENTRY *entry = findEntry(key, entries);
@@ -752,7 +756,8 @@ char* currentDate()
 
   int iDate = (1900 + tm.tm_year) * 10000 + (tm.tm_mon + 1) * 100 + tm.tm_mday;
 
-  char *buffer = new char[9];
+  // char *buffer = new char[9];
+  char *buffer = (char*)malloc(sizeof(char) * 9);
   char *result = _itoa(iDate, buffer, 10);
   return result;
 }
@@ -764,14 +769,16 @@ char* currentTime()
 
   int iHHMM = tm.tm_hour * 100 + tm.tm_min;
 
-  char *buffer = new char[9];
+  // char *buffer = new char[5];
+  char *buffer = (char*)malloc(sizeof(char) * 5);
   char *result = _itoa(iHHMM, buffer, 10);
   return result;
 }
 
 char* currentWorkDir()
 {
-  char *buffer = new char[FILENAME_MAX];
+  // char *buffer = new char[FILENAME_MAX];
+  char *buffer = (char*)malloc(sizeof(char) * FILENAME_MAX);
 
   _getcwd(buffer, FILENAME_MAX);
 
@@ -884,7 +891,7 @@ char* test()
   printf("lpad(\"%s\", '-', 10) -> \"%s\"\n", text, lpad(text, '-', 10));
   printf("rpad(\"%s\", '-', 10) -> \"%s\"\n", text, rpad(text, '-', 10));
   printf("substring(\"%s\", 1, 3) -> \"%s\"\n", text, substring(text,1,3));
-  printf("substring(\"%s\", 1) -> \"%s\"\n", text, substring(text,1));
+  printf("substring(\"%s\", 1, -1) -> \"%s\"\n", text, substring(text,1,-1));
   printf("indexOf(\"%s\",'L') -> %d\n", text, indexOf(text, 'L'));
   printf("lastIndexOf(\"%s\",'L') -> %d\n", text, lastIndexOf(text, 'L'));
   printf("hashCode(\"%s\") -> %d\n", text, hashCode(text));
