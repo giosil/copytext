@@ -1,4 +1,10 @@
-#include "pch.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <tchar.h>
+
+#include <direct.h>
+#include <windows.h>
 
 #define OPT_HELP         1
 #define OPT_LOWERCASE    2
