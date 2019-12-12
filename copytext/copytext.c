@@ -38,6 +38,9 @@ typedef struct _MAP_ENTRY
 
 // Functions declarations
 
+// itoa and _itoa is not defined in ANSI-C and is not part of C++, but is supported by some compilers.
+char* __itoa(int value, char* buffer, int base);
+
 char* lowerCase(const char *text);
 char* upperCase(const char *text);
 char* capitalize(const char *text);
@@ -159,6 +162,46 @@ int main(int argc, char* argv[])
 }
 
 // Functions Implementation
+
+char* __itoa(int value, char* buffer, int base)
+{
+  // invalid input
+  if (base < 2 || base > 32)
+    return buffer;
+
+  // consider absolute value of number
+  int n = abs(value);
+  int i = 0;
+  while (n) {
+    int r = n % base;
+    if (r >= 10)
+      buffer[i++] = 65 + (r - 10);
+    else
+      buffer[i++] = 48 + r;
+    n = n / base;
+  }
+
+  // if number is 0
+  if (i == 0)
+    buffer[i++] = '0';
+
+  // If base is 10 and value is negative, the resulting string 
+  // is preceded with a minus sign (-)
+  // With any other base, value is always considered unsigned
+  if (value < 0 && base == 10)
+    buffer[i++] = '-';
+
+  buffer[i] = '\0'; // null terminate string
+
+  // reverse the string
+  int c = 0;
+  while (c < i) {
+    char t = buffer[--i];
+    buffer[i] = buffer[c];
+    buffer[c++] = t;
+  }
+  return buffer;
+}
 
 char* lowerCase(const char *text)
 {
@@ -633,11 +676,11 @@ MAP_ENTRY* parseConfig(const char *text)
           char *val = getValue(row);
           int hash = hashCode(key);
 
-		  entries[r].key = key;
-		  entries[r].value = val;
-		  entries[r].hashCode = hash;
-		  entries[r].next = NULL;
-		  if (r > 0) {
+      entries[r].key = key;
+      entries[r].value = val;
+      entries[r].hashCode = hash;
+      entries[r].next = NULL;
+      if (r > 0) {
             entries[r - 1].next = &entries[r];
           }
           r++;
@@ -645,7 +688,7 @@ MAP_ENTRY* parseConfig(const char *text)
       }
       if (r >= 100) break;
       // row = new char[121];
-	  row = (char*)malloc(sizeof(char) * 121);
+    row = (char*)malloc(sizeof(char) * 121);
       c = 0;
     }
     else if (text[i] > 31) {
@@ -758,7 +801,7 @@ char* currentDate()
 
   // char *buffer = new char[9];
   char *buffer = (char*)malloc(sizeof(char) * 9);
-  char *result = _itoa(iDate, buffer, 10);
+  char *result = __itoa(iDate, buffer, 10);
   return result;
 }
 
@@ -771,7 +814,7 @@ char* currentTime()
 
   // char *buffer = new char[5];
   char *buffer = (char*)malloc(sizeof(char) * 5);
-  char *result = _itoa(iHHMM, buffer, 10);
+  char *result = __itoa(iHHMM, buffer, 10);
   return result;
 }
 
