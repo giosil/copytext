@@ -5,8 +5,11 @@
 #include <time.h>
 
 // Microsoft headers
+
 #include <direct.h>
 #include <windows.h>
+
+// Macros
 
 #define OPT_HELP         1
 #define OPT_LOWERCASE    2
@@ -25,6 +28,9 @@
 #define OPT_INTERACTIVE 15
 #define OPT_TEST        16
 
+#define EMPTY_STRING _strdup("")
+#define COPY_OF(s) _strdup(s)
+
 // Structures declarations
 
 typedef struct _MAP_ENTRY
@@ -38,7 +44,7 @@ typedef struct _MAP_ENTRY
 
 // Functions declarations
 
-// itoa and _itoa is not defined in ANSI-C and is not part of C++, but is supported by some compilers.
+// itoa and _itoa are not defined in ANSI-C and are not part of C++, but are supported by some compilers.
 char* __itoa(int value, char* buffer, int base);
 
 char* lowerCase(const char *text);
@@ -81,7 +87,7 @@ char* currentWorkDir();
 
 int getOption(int argc, char* argv[]);
 void showHelp();
-char* test();
+void test();
 
 // Entry point
 
@@ -144,7 +150,7 @@ int main(int argc, char* argv[])
       text = readStdIn(100);
       break;
   case OPT_TEST:
-      text = test();
+      test();
       break;
   }
 
@@ -206,7 +212,7 @@ char* __itoa(int value, char* buffer, int base)
 char* lowerCase(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return _strdup("");
+  if (len == 0) return EMPTY_STRING;
 
   // char *buffer = new char[len + 1];
   char *buffer = (char*)malloc(sizeof(char) * (len + 1));
@@ -222,7 +228,7 @@ char* lowerCase(const char *text)
 char* upperCase(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return _strdup("");
+  if (len == 0) return EMPTY_STRING;
 
   // char *buffer = new char[len + 1];
   char *buffer = (char*)malloc(sizeof(char) * (len + 1));
@@ -238,7 +244,7 @@ char* upperCase(const char *text)
 char* capitalize(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return _strdup("");
+  if (len == 0) return EMPTY_STRING;
 
   // bool first = true; // Not supported by ISO C90
   short first = 1;
@@ -265,7 +271,7 @@ char* capitalize(const char *text)
 char* reverse(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return _strdup("");
+  if (len == 0) return EMPTY_STRING;
 
   // char *buffer = new char[len + 1];
   char *buffer = (char*)malloc(sizeof(char) * (len + 1));
@@ -281,7 +287,7 @@ char* reverse(const char *text)
 char* quote(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return _strdup("");
+  if (len == 0) return EMPTY_STRING;
 
   int count = 0;
   for (int i = 0; i < len; i++) {
@@ -308,7 +314,7 @@ char* quote(const char *text)
 char* numbers(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return _strdup("");
+  if (len == 0) return EMPTY_STRING;
 
   int count = 0;
   for (int i = 0; i < len; i++) {
@@ -363,7 +369,7 @@ char* concatPath(const char *text1, const char *text2)
 char* ltrim(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return _strdup("");
+  if (len == 0) return EMPTY_STRING;
 
   // char *buffer = new char[len + 1];
   char *buffer = (char*)malloc(sizeof(char) * (len + 1));
@@ -389,7 +395,7 @@ char* ltrim(const char *text)
 char* rtrim(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return _strdup("");
+  if (len == 0) return EMPTY_STRING;
 
   // char *buffer = new char[len + 1];
   char *buffer = (char*)malloc(sizeof(char) * (len + 1));
@@ -426,7 +432,7 @@ char* trim(const char *text)
 char* lpad(const char *text, char c, int length)
 {
   size_t len = strlen(text);
-  if (len >= length) return _strdup(text);
+  if (len >= length) return COPY_OF(text);
 
   // char *buffer = new char[length + 1];
   char *buffer = (char*)malloc(sizeof(char) * (length + 1));
@@ -444,7 +450,7 @@ char* lpad(const char *text, char c, int length)
 char* rpad(const char *text, char c, int length)
 {
   size_t len = strlen(text);
-  if (len >= length) return _strdup(text);
+  if (len >= length) return COPY_OF(text);
 
   // char *buffer = new char[length + 1];
   char *buffer = (char*)malloc(sizeof(char) * (length + 1));
@@ -469,7 +475,7 @@ char* substring(const char *text, int beginIndex, int endIndex)
     endIndex = (int)strlen(text);
   }
   if (beginIndex >= endIndex) {
-    return _strdup("");
+    return EMPTY_STRING;
   }
   
   int len = endIndex - beginIndex;
@@ -492,13 +498,13 @@ char* substring(const char *text, int beginIndex, int endIndex)
 char* removeQuotes(const char *text)
 {
   size_t len = strlen(text);
-  if (len == 0) return _strdup("");
+  if (len == 0) return EMPTY_STRING;
 
   if (text[0] != '\'' && text[0] != '"') {
-    return _strdup(text);
+    return COPY_OF(text);
   }
   if (text[len - 1] != '\'' && text[len - 1] != '"') {
-    return _strdup(text);
+    return COPY_OF(text);
   }
   
   int i = 0;
@@ -560,7 +566,7 @@ char* readTextFile(const char *file, int max)
 
   if (fp == NULL) {
     printf("File %s not found", file);
-    return _strdup("");
+    return EMPTY_STRING;
   }
 
   if (max == 0) max = 255;
@@ -612,7 +618,7 @@ char* readStdIn(int max)
     }
   }
   if (end == 0) {
-    return _strdup("");
+    return EMPTY_STRING;
   }
 
   return trim(buffer);
@@ -625,7 +631,7 @@ char* getKey(const char *text)
     idx = lastIndexOf(text, ':');
   }
   if (idx < 0) {
-    return _strdup("");
+    return EMPTY_STRING;
   }
 
   char *sub = substring(text, 0, idx);
@@ -642,7 +648,7 @@ char* getValue(const char *text)
     idx = lastIndexOf(text, ':');
   }
   if (idx < 0) {
-    return _strdup(text);
+    return COPY_OF(text);
   }
 
   char *sub = substring(text, idx + 1, -1);
@@ -696,8 +702,8 @@ MAP_ENTRY* parseConfig(const char *text)
     }
   }
 
-  entries[r].key = _strdup("");
-  entries[r].value = _strdup("");
+  entries[r].key = EMPTY_STRING;
+  entries[r].value = EMPTY_STRING;
   entries[r].hashCode = 0;
   entries[r].next = NULL;
   if (r > 0) {
@@ -789,7 +795,7 @@ char* findValue(const char *text)
   if (entry->hashCode) {
     return entry->value;
   }
-  return _strdup("");
+  return EMPTY_STRING;
 }
 
 char* currentDate()
@@ -917,9 +923,9 @@ void showHelp()
   printf("  (HELLO copied in clipboard)\n\n");
 }
 
-char* test()
+void test()
 {
-  char *text = _strdup(" heLL0 ");
+  const char* text = " heLL0 ";
   printf("lowerCase(\"%s\") -> \"%s\"\n", text, lowerCase(text));
   printf("upperCase(\"%s\") -> \"%s\"\n", text, upperCase(text));
   printf("capitalize(\"%s\") -> \"%s\"\n", text, capitalize(text));
@@ -939,10 +945,10 @@ char* test()
   printf("lastIndexOf(\"%s\",'L') -> %d\n", text, lastIndexOf(text, 'L'));
   printf("hashCode(\"%s\") -> %d\n", text, hashCode(text));
 
-  text = _strdup("# Comment\nname=Clark\nsurname=Kent\ngender=M\ncity=Metropolis\nnickname=Superman");
+  const char* config = "# Comment\nname=Clark\nsurname=Kent\ngender=M\ncity=Metropolis\nnickname=Superman";
   printf("\nparseConfig...\n");
 
-  MAP_ENTRY *entries = parseConfig(text);
+  MAP_ENTRY *entries = parseConfig(config);
   printEntries(entries);
 
   printf("\n");
@@ -952,6 +958,4 @@ char* test()
   
   entry = findEntry("name", entries);
   printf("findEntry(\"name\", entries) -> entry.value=\"%s\"\n", entry->value);
-
-  return _strdup("test");
 }
