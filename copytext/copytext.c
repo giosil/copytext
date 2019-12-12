@@ -3,8 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
-#include <tchar.h>
 
+// Microsoft headers
 #include <direct.h>
 #include <windows.h>
 
