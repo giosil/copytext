@@ -4,12 +4,22 @@
 #include <ctype.h>
 #include <time.h>
 
-// Microsoft headers
+#if defined(_WIN32) || defined(_WIN64)
 
 #include <direct.h>
 #include <windows.h>
 
-// Macros
+#define EMPTY_STRING  _strdup("")
+#define COPY_OF(s)    _strdup(s)
+#define CURR_WORK_DIR _getcwd((char*)malloc(sizeof(char) * FILENAME_MAX), FILENAME_MAX)
+
+#else
+
+#define EMPTY_STRING  strdup("")
+#define COPY_OF(s)    strdup(s)
+#define CURR_WORK_DIR strdup("")
+
+#endif
 
 #define OPT_HELP         1
 #define OPT_LOWERCASE    2
@@ -27,22 +37,6 @@
 #define OPT_WORK_DIR    14
 #define OPT_INTERACTIVE 15
 #define OPT_TEST        16
-
-//             MVC                    GCC
-#if defined(_WINDOWS_) || defined(_WINDOWS_H)
-
-#define EMPTY_STRING  _strdup("")
-#define COPY_OF(s)    _strdup(s)
-#define CURR_WORK_DIR _getcwd((char*)malloc(sizeof(char) * FILENAME_MAX), FILENAME_MAX)
-
-#else
-
-#define EMPTY_STRING  strdup("")
-#define COPY_OF(s)    strdup(s)
-#define CURR_WORK_DIR strdup("")
-
-#endif
-
 
 // Structures declarations
 
@@ -180,7 +174,7 @@ int main(int argc, char* argv[])
 
   #else
 
-  printf('%s\n', text);
+  printf("%s\n", text);
 
   #endif
 
