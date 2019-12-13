@@ -28,6 +28,7 @@
 #define OPT_INTERACTIVE 15
 #define OPT_TEST        16
 
+//             MVC                    GCC
 #if defined(_WINDOWS_) || defined(_WINDOWS_H)
 
 #define EMPTY_STRING  _strdup("")
