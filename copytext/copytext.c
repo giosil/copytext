@@ -28,8 +28,9 @@
 #define OPT_INTERACTIVE 15
 #define OPT_TEST        16
 
-#define EMPTY_STRING _strdup("")
-#define COPY_OF(s) _strdup(s)
+#define EMPTY_STRING  _strdup("")
+#define COPY_OF(s)    _strdup(s)
+#define CURR_WORK_DIR _getcwd((char*)malloc(sizeof(char) * FILENAME_MAX), FILENAME_MAX)
 
 // Structures declarations
 
@@ -83,7 +84,6 @@ void printEntries(MAP_ENTRY* entries);
 
 char* currentDate();
 char* currentTime();
-char* currentWorkDir();
 
 int getOption(int argc, char* argv[]);
 void showHelp();
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
       text = findValue(text);
       break;
     case OPT_WORK_DIR:
-      text = concatPath(currentWorkDir(), text);
+      text = concatPath(CURR_WORK_DIR, text);
       break;
     case OPT_INTERACTIVE:
       text = readStdIn(100);
@@ -822,16 +822,6 @@ char* currentTime()
   char *buffer = (char*)malloc(sizeof(char) * 5);
   char *result = __itoa(iHHMM, buffer, 10);
   return result;
-}
-
-char* currentWorkDir()
-{
-  // char *buffer = new char[FILENAME_MAX];
-  char *buffer = (char*)malloc(sizeof(char) * FILENAME_MAX);
-
-  _getcwd(buffer, FILENAME_MAX);
-
-  return buffer;
 }
 
 int getOption(int argc, char* argv[])
