@@ -28,9 +28,20 @@
 #define OPT_INTERACTIVE 15
 #define OPT_TEST        16
 
+#if defined(_WINDOWS_) || defined(_WINDOWS_H)
+
 #define EMPTY_STRING  _strdup("")
 #define COPY_OF(s)    _strdup(s)
 #define CURR_WORK_DIR _getcwd((char*)malloc(sizeof(char) * FILENAME_MAX), FILENAME_MAX)
+
+#else
+
+#define EMPTY_STRING  strdup("")
+#define COPY_OF(s)    strdup(s)
+#define CURR_WORK_DIR strdup("")
+
+#endif
+
 
 // Structures declarations
 
@@ -154,6 +165,8 @@ int main(int argc, char* argv[])
       break;
   }
 
+  #if defined(_WINDOWS_) || defined(_WINDOWS_H)
+
   GLOBALHANDLE hGlobal = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT | GMEM_SHARE, 1024);
   char *pGlobal = (char*)GlobalLock(hGlobal);
   strcpy(pGlobal, text);
@@ -163,6 +176,12 @@ int main(int argc, char* argv[])
   EmptyClipboard();
   SetClipboardData(CF_TEXT, hGlobal);
   CloseClipboard();
+
+  #else
+
+  printf('%s\n', text);
+
+  #endif
 
   return 0;
 }
