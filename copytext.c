@@ -438,9 +438,39 @@ char* rtrim(const char *text)
 
 char* trim(const char *text)
 {
-  char *buffer = ltrim(text);
+  size_t len = strlen(text);
+  if (len == 0) return EMPTY_STRING;
 
-  return rtrim(buffer);
+  // char *buffer = new char[len + 1];
+  char *buffer = (char*)malloc(sizeof(char) * (len + 1));
+  char *result = buffer;
+
+  int i = 0;
+  int lastPrintable = -1;
+
+  // bool copy = false; // Not supported by ISO C90
+  short copy = 0;
+  while (*text != '\0') {
+    if (*text > 32) {
+      *buffer++ = *text;
+      copy = 1;
+      lastPrintable = i++;
+    }
+    else if (copy) {
+      *buffer++ = *text;
+      i++;
+    }
+    text++;
+  }
+  if (lastPrintable < 0) {
+    *buffer = '\0';
+  }
+  else {
+    // buffer e' incrementato, si usa result
+    result[lastPrintable + 1] = '\0';
+  }
+
+  return result;
 }
 
 char* lpad(const char *text, char c, int length)
