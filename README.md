@@ -1,6 +1,6 @@
 # copytext
 
-Command line to copy text to clipboard.
+Command line tool to copy text to clipboard.
 
 ## Build
 
