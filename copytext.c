@@ -46,7 +46,6 @@ typedef struct _MAP_ENTRY
   char *value;
   int  hashCode;
   struct _MAP_ENTRY *next;
-
 } MAP_ENTRY;
 
 // Functions declarations
@@ -707,12 +706,12 @@ char* getValue(const char *text)
 MAP_ENTRY* parseConfig(const char *text)
 {
   // MAP_ENTRY *entries = new MAP_ENTRY[101]; // "new" is not C
-  MAP_ENTRY *entries = (MAP_ENTRY*)malloc(sizeof(MAP_ENTRY) * 100);
-  MAP_ENTRY *result = entries;
-
+  MAP_ENTRY *currEntry = (MAP_ENTRY*)malloc(sizeof(MAP_ENTRY));
+  MAP_ENTRY *lastEntry = NULL;
+  MAP_ENTRY *result = currEntry;
+  
   size_t len = strlen(text);
   int c = 0;
-  int r = 0;
   // char *row = new char[121];
   char *row = (char*)malloc(sizeof(char) * 121);
   for (int i = 0; i < len + 1; i++) {
@@ -725,20 +724,23 @@ MAP_ENTRY* parseConfig(const char *text)
         if (lenKey > 0) {
           char *val = getValue(row);
           int hash = hashCode(key);
-
-      entries[r].key = key;
-      entries[r].value = val;
-      entries[r].hashCode = hash;
-      entries[r].next = NULL;
-      if (r > 0) {
-            entries[r - 1].next = &entries[r];
+          
+          free(row);
+          
+          currEntry->key = key;
+          currEntry->value = val;
+          currEntry->hashCode = hash;
+          currEntry->next = NULL;
+          if (lastEntry) {
+            lastEntry->next = currEntry;
           }
-          r++;
+          lastEntry = currEntry;
+          
+          currEntry = (MAP_ENTRY*)malloc(sizeof(MAP_ENTRY));
         }
       }
-      if (r >= 100) break;
       // row = new char[121];
-    row = (char*)malloc(sizeof(char) * 121);
+      row = (char*)malloc(sizeof(char) * 121);
       c = 0;
     }
     else if (text[i] > 31) {
@@ -746,12 +748,12 @@ MAP_ENTRY* parseConfig(const char *text)
     }
   }
 
-  entries[r].key = EMPTY_STRING;
-  entries[r].value = EMPTY_STRING;
-  entries[r].hashCode = 0;
-  entries[r].next = NULL;
-  if (r > 0) {
-    entries[r - 1].next = &entries[r];
+  currEntry->key = EMPTY_STRING;
+  currEntry->value = EMPTY_STRING;
+  currEntry->hashCode = 0;
+  currEntry->next = NULL;
+  if (lastEntry) {
+    lastEntry->next = currEntry;
   }
   return result;
 }
@@ -808,7 +810,7 @@ void printEntries(MAP_ENTRY* entries)
   printf("%s%s%s\n", rpad("", '-', WIDTH), rpad("", '-', WIDTH), "-----------");
   while (1) {
     // Check Last entry
-    if (entry->hashCode == 0) break;
+    if (!entry->next) break;
     printf("%s%s%d\n", rpad(entry->key, ' ', WIDTH), rpad(entry->value, ' ', WIDTH), entry->hashCode);
     if (entry->next) {
       entry = entry->next;
