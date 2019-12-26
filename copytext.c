@@ -706,14 +706,14 @@ char* getValue(const char *text)
 MAP_ENTRY* parseConfig(const char *text)
 {
   // MAP_ENTRY *entries = new MAP_ENTRY[101]; // "new" is not C
-  MAP_ENTRY *currEntry = (MAP_ENTRY*)malloc(sizeof(MAP_ENTRY));
+  MAP_ENTRY *currEntry = NULL;
   MAP_ENTRY *lastEntry = NULL;
-  MAP_ENTRY *result = currEntry;
+  MAP_ENTRY *result = NULL;
   
   size_t len = strlen(text);
   int c = 0;
   // char *row = new char[121];
-  char *row = (char*)malloc(sizeof(char) * 121);
+  char *row = (char*) malloc(sizeof(char) * 121);
   for (int i = 0; i < len + 1; i++) {
     if (text[i] == 10 || text[i] == 0) { // [LF],[\0]
       // End row
@@ -727,6 +727,7 @@ MAP_ENTRY* parseConfig(const char *text)
           
           free(row);
           
+          currEntry = (MAP_ENTRY*) malloc(sizeof(MAP_ENTRY));
           currEntry->key = key;
           currEntry->value = val;
           currEntry->hashCode = hash;
@@ -734,13 +735,14 @@ MAP_ENTRY* parseConfig(const char *text)
           if (lastEntry) {
             lastEntry->next = currEntry;
           }
+          else {
+            result = currEntry;
+          }
           lastEntry = currEntry;
-          
-          currEntry = (MAP_ENTRY*)malloc(sizeof(MAP_ENTRY));
         }
       }
       // row = new char[121];
-      row = (char*)malloc(sizeof(char) * 121);
+      row = (char*) malloc(sizeof(char) * 121);
       c = 0;
     }
     else if (text[i] > 31) {
@@ -748,13 +750,6 @@ MAP_ENTRY* parseConfig(const char *text)
     }
   }
 
-  currEntry->key = EMPTY_STRING;
-  currEntry->value = EMPTY_STRING;
-  currEntry->hashCode = 0;
-  currEntry->next = NULL;
-  if (lastEntry) {
-    lastEntry->next = currEntry;
-  }
   return result;
 }
 
@@ -767,6 +762,8 @@ MAP_ENTRY* loadConfigFile(const char *file)
 
 MAP_ENTRY* cloneEntry(MAP_ENTRY* entry)
 {
+  if (!entry) return NULL;
+  
   // MAP_ENTRY* result = new MAP_ENTRY; // C++ 
   MAP_ENTRY* result = (MAP_ENTRY*) malloc(sizeof(MAP_ENTRY));
   
@@ -774,50 +771,39 @@ MAP_ENTRY* cloneEntry(MAP_ENTRY* entry)
   result->value = entry->value;
   result->hashCode = entry->hashCode;
   result->next = entry->next;
-
+  
   return result;
 }
 
 MAP_ENTRY* findEntry(const char *key, MAP_ENTRY* entries)
 {
+  if (!entries) return NULL;
+  
   int keyHashCode = hashCode(key);
-
+  
   MAP_ENTRY* entry = entries;
   while (1) {
-    int entryHashCode = entry->hashCode;
-    if (entryHashCode == 0) {
-      // Last entry
+    if (entry->hashCode == keyHashCode) {
       return entry;
     }
-    if (entryHashCode == keyHashCode) {
-      return entry;
-    }
-    if (entry->next) {
-      entry = entry->next;
-    }
-    else {
-      break;
-    }
+    if (!entry->next) break;
+    entry = entry->next;
   }
-  return entry;
+  return NULL;
 }
 
 void printEntries(MAP_ENTRY* entries)
 { 
+  if (!entries) return;
+  
   const int WIDTH = 25;
   MAP_ENTRY* entry = entries;
   printf("%s%s%s\n", rpad("Key", ' ', WIDTH), rpad("Value", ' ', WIDTH), "Hashcode");
   printf("%s%s%s\n", rpad("", '-', WIDTH), rpad("", '-', WIDTH), "-----------");
   while (1) {
-    // Check Last entry
-    if (!entry->next) break;
     printf("%s%s%d\n", rpad(entry->key, ' ', WIDTH), rpad(entry->value, ' ', WIDTH), entry->hashCode);
-    if (entry->next) {
-      entry = entry->next;
-    }
-    else {
-      break;
-    }
+    if (!entry->next) break;
+    entry = entry->next;
   }
 }
 
@@ -838,7 +824,7 @@ char* findValue(const char *text)
   MAP_ENTRY *entries = loadConfigFile(cfg);
   MAP_ENTRY *entry = findEntry(key, entries);
   
-  if (entry->hashCode) {
+  if (entry) {
     return entry->value;
   }
   return EMPTY_STRING;
@@ -981,8 +967,8 @@ void test()
   printf("lastIndexOf(\"%s\",'L') -> %d\n", text, lastIndexOf(text, 'L'));
   printf("hashCode(\"%s\") -> %d\n", text, hashCode(text));
 
-  const char* config = "# Comment\nname=Clark\nsurname=Kent\ngender=M\ncity=Metropolis\nnickname=Superman";
-  printf("\nparseConfig...\n");
+  const char* config = "# Comment\nname=Clark\nsurname='Kent'\ngender=M\ncity=Metropolis\nnickname=Superman";
+  printf("\nparseConfig...\n\n%s\n\n", config);
 
   MAP_ENTRY *entries = parseConfig(config);
   printEntries(entries);
@@ -990,8 +976,18 @@ void test()
   printf("\n");
 
   MAP_ENTRY *entry = findEntry("city", entries);
-  printf("findEntry(\"city\", entries) -> entry.value=\"%s\"\n", entry->value);
+  if (entry) {
+    printf("findEntry(\"city\", entries) -> entry.value=\"%s\"\n", entry->value);
+  }
+  else {
+    printf("findEntry(\"city\", entries) -> NULL");
+  }
   
   entry = findEntry("name", entries);
-  printf("findEntry(\"name\", entries) -> entry.value=\"%s\"\n", entry->value);
+  if (entry) {
+    printf("findEntry(\"name\", entries) -> entry.value=\"%s\"\n", entry->value);
+  }
+  else {
+    printf("findEntry(\"name\", entries) -> NULL");
+  }
 }
