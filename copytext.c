@@ -11,13 +11,15 @@
 
 #define EMPTY_STRING  _strdup("")
 #define STRDUP(s)     _strdup(s)
-#define CURR_WORK_DIR _getcwd((char*)malloc(sizeof(char) * FILENAME_MAX), FILENAME_MAX)
+#define CURR_WORK_DIR _getcwd((char*) NULL, 0)
 
 #else
 
+#include <unistd.h>
+
 #define EMPTY_STRING  strdup("")
 #define STRDUP(s)     strdup(s)
-#define CURR_WORK_DIR strdup("")
+#define CURR_WORK_DIR getcwd((char*) NULL, 0)
 
 #endif
 
