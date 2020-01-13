@@ -759,15 +759,15 @@ char* getValue(const char *text)
 
 MAP_ENTRY* parseConfig(const char *text)
 {
-  // MAP_ENTRY *entries = new MAP_ENTRY[101]; // "new" is not C
+  // MAP_ENTRY *entries = new MAP_ENTRY[101]; // C++
   MAP_ENTRY *currEntry = NULL; // ((void *)0)
   MAP_ENTRY *lastEntry = NULL; // ((void *)0)
   MAP_ENTRY *result = NULL; // ((void *)0)
 
   size_t len = strlen(text);
   int c = 0;
-  // char *row = new char[121];
-  char *row = (char*)malloc(sizeof(char) * 121);
+  // char *row = new char[201]; // C++
+  char *row = (char*)malloc(sizeof(char) * 201);
   for (int i = 0; i < len + 1; i++) {
     if (text[i] == 10 || text[i] == 0) { // [LF],[\0]
       // End row
@@ -778,8 +778,6 @@ MAP_ENTRY* parseConfig(const char *text)
         if (lenKey > 0) {
           char *val = getValue(row);
           int hash = hashCode(key);
-
-          free(row);
 
           currEntry = (MAP_ENTRY*)malloc(sizeof(MAP_ENTRY));
           currEntry->key = key;
@@ -795,14 +793,13 @@ MAP_ENTRY* parseConfig(const char *text)
           lastEntry = currEntry;
         }
       }
-      // row = new char[121];
-      row = (char*)malloc(sizeof(char) * 121);
       c = 0;
     }
     else if (text[i] > 31) {
       row[c++] = text[i];
     }
   }
+  free(row);
 
   return result;
 }
