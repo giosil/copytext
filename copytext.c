@@ -768,7 +768,8 @@ MAP_ENTRY* parseConfig(const char *text)
   int c = 0;
   // char *row = new char[201]; // C++
   char *row = (char*)malloc(sizeof(char) * 201);
-  for (int i = 0; i < len + 1; i++) {
+  // i <= len (not only <) to check end text
+  for (int i = 0; i <= len; i++) {
     if (text[i] == 10 || text[i] == 0) { // [LF],[\0]
       // End row
       row[c] = '\0';
